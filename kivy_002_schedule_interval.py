@@ -10,7 +10,7 @@ import threading as thr
 
 class LoginScreen(GridLayout):
     lb_1 = Label()
-    index = 0
+    index = 32
 
     def __init__(self, **kwargs):
         super(LoginScreen, self).__init__(**kwargs)

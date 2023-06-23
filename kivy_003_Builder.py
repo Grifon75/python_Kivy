@@ -13,11 +13,24 @@ class MyLabel(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.index = 0
-        Clock.schedule_interval(self.schedule_label, 1 / 2)
+        Clock.schedule_once(self.schedule_label, 1)
+        # Clock.schedule_interval(self.schedule_label, 1/2)
 
     def schedule_label(self, *args):
-        self.ids.lbl_001.text = '{0}'.format(self.index)
-        self.index += 1
+        print('123')
+        Clock.schedule_once(self.schedule_label_2, 1)
+        # self.ids.lbl_001.text = '{0}'.format(self.index)
+        # self.index += 1
+
+    def schedule_label_2(self, *args):
+        print('321')
+        trigger = Clock.create_trigger(self.trigger_func, 2)
+        # later
+        trigger()
+
+    def trigger_func(self, *args):
+        print('trigger work')
+
 
 
 class MyApp(App):
