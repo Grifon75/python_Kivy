@@ -4,6 +4,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ListProperty, AliasProperty
+import ctypes as ct
 
 
 class RootWidget(BoxLayout):
@@ -11,15 +12,16 @@ class RootWidget(BoxLayout):
     def __init__(self, **kwargs):
         super(RootWidget, self).__init__(**kwargs)
         self.add_widget(Button(text='btn 1', size=(self.width * .2, self.height * .1), font_size=self.height * .25))
-        cb = CustomBtn(text='btn test', font_size=50, color=(2, 2, 2, 1), background_color=(1, 1, 1, 1), font_name='Mistral',
+        cb = CustomBtn(text='btn test', font_size=50, color=(2, 2, 2, 1), background_color=(1, 1, 1, 1),
+                       font_name='Mistral',
                        italic=True, border=(29, 29, 29, 29))
-        # cb.bind(on_pressed=self.btn_pressed)
+        cb.bind(on_pressed=self.btn_pressed)
         self.add_widget(cb)
         self.add_widget(Button(text='btn 2'))
 
     def btn_pressed(self, *args):
         ins, x, y = args
-        print(x, y)
+        print('button pressed', x, y)
 
 
 # class MyAliasProperty(AliasProperty):
@@ -39,26 +41,26 @@ class CustomBtn(Button):
 
     def bg_color(self, event):
         self.background_color = '#7777ee'
+
     def _get_pos(self):
         print('getter work')
         # Clock.schedule_once(self.bg_color, .2)
-        return (self.x, self.y)
+        return self.x, self.y
 
     # cursor_pos = AliasProperty(_get_pos, None,
     #                            bind=('cursor', 'size',
     #                                  'focus', 'scroll_x', 'scroll_y',
     #                                  'line_height', 'line_spacing'),
     #                            cache=True)
-    cursor_pos = AliasProperty(_get_pos, None,
-                               bind=('size',
-                                     'line_height', 'background_color'),
-                               cache=True)
+    cursor_pos = AliasProperty(_get_pos, None, bind=('size', 'line_height', 'background_color'), cache=True)
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
             # print(self._get_pos())
             # print(self.cursor_pos)
             # self.pressed = touch.pos
+            qw, wq = self.cursor_pos
+            print('x = ', qw, 'y = ', wq)
             self.dispatch('on_pressed', *touch.pos)
             # we consumed the touch. return False here to propagate
             # the touch further to the children.
