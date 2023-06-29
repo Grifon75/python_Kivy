@@ -1,13 +1,31 @@
+import io
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.slider import Slider
-from kivy.graphics import Color, Bezier, Line, RoundedRectangle, Triangle, SmoothLine
+from kivy.graphics import Color, Bezier, Line, RoundedRectangle, Triangle, SmoothLine, Canvas, Rectangle
 from math import cos, sin, radians
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.image import Image
+from kivy.uix.stencilview import StencilView
 
 x, y = (360, 300)
+
+
+class ColorManager:
+    def __init__(self, red, green, blue):
+        self.red = red
+        self.green = green
+        self.blue = blue
+
+
+class ColorRGB:
+    def __init__(self, value=1., value_step=None, limit_up=.7, limit_down=.3):
+        self.value = value
+        self.value_step = value_step
+        self.limit_up = limit_up
+        self.limit_down = limit_down
 
 
 class FlashCircle:
@@ -25,15 +43,14 @@ class FlashCircle:
 
 
 class Arrow:
-    color_red = 0.5
-    color_red_delta = 0.01
     points = []
     color = []
 
-    def __init__(self, degrade, length_arrow, degrade_point):
+    def __init__(self, degrade, length_arrow, degrade_point, point_width):
         self.degrade = degrade
         self.length_arrow = length_arrow
         self.degrade_point = degrade_point
+        self.point_width = point_width
 
 
 class CirclePoint:
@@ -55,7 +72,10 @@ class BezierTest(FloatLayout):
         self.add_widget(label_)
         # self.add_widget(Button(text='My first button', size_hint=(.1, .1), pos_hint={'x': 0}))
         with self.canvas:
-            circle_color = Color(.5, .5, .6)
+            Color(.35, .35, .35)
+            self.circle = RoundedRectangle(size=(520, 520), pos=(x - 260, y - 260), radius=(260, 260))
+        with self.canvas:
+            clock_face_color = Color(.5, .5, .5)
             self.circle = RoundedRectangle(size=(500, 500), pos=(x - 250, y - 250), radius=(250, 250))
         map_circle = dict()
         index = 0
@@ -63,22 +83,43 @@ class BezierTest(FloatLayout):
         flash = FlashCircle()
         while index < 360:
             if not index % 30:
-                x_ = (x - 9) + 240 * cos(radians(index))
-                y_ = (y - 9) + 240 * sin(radians(index))
+                x_ = (x - 9) + (arrow_sec.length_arrow-30) * cos(radians(index))
+                y_ = (y - 9) + (arrow_sec.length_arrow-30) * sin(radians(index))
                 with self.canvas:
                     clr = Color(flash.fade_color[0], flash.fade_color[1], flash.fade_color[2])
                     self.circle_ = RoundedRectangle(size=(18, 18), pos=(x_, y_), radius=(9, 9))
                     map_circle[index_r] = clr
             else:
-                x_ = (x - 5) + 240 * cos(radians(index))
-                y_ = (y - 5) + 240 * sin(radians(index))
+                x_ = (x - 5) + (arrow_sec.length_arrow-30) * cos(radians(index))
+                y_ = (y - 5) + (arrow_sec.length_arrow-30) * sin(radians(index))
                 with self.canvas:
                     clr = Color(flash.fade_color[0], flash.fade_color[1], flash.fade_color[2])
                     self.circle_ = RoundedRectangle(size=(10, 10), pos=(x_, y_), radius=(5, 5))
                     map_circle[index_r] = clr
             index += 6
             index_r -= 6
-        print(map_circle)
+        with self.canvas:
+            Color(.13, .13, .13)
+            RoundedRectangle(size=(380, 380), pos=(x - 190, y - 190), radius=(190, 190))
+            #d:\Ava\sexmachine999-2gnhz-5bb16a.gif image\Dali_open_window.jpg
+        # image = Image(r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif')
+        # data = io.BytesIO(open(r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif', "rb").read())
+        # im_ = Image(data, ext="gif")
+        texture = Image(source=r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif', size_hint=(.1, .1)).texture
+        # Valid properties are['allow_stretch', 'anim_delay', 'anim_loop', 'center', 'center_x', 'center_y', 'children',
+        # 'cls', 'color', 'disabled', 'fit_mode', 'height', 'ids', 'image_ratio', 'keep_data', 'keep_ratio', 'mipmap',
+        # 'motion_filter', 'nocache', 'norm_image_size', 'opacity', 'parent', 'pos', 'pos_hint', 'right', 'size',
+        # 'size_hint', 'size_hint_max', 'size_hint_max_x', 'size_hint_max_y', 'size_hint_min', 'size_hint_min_x',
+        # 'size_hint_min_y', 'size_hint_x', 'size_hint_y', 'source', 'texture', 'texture_size', 'top', 'width',
+        # 'x', 'y']
+        # self.rpmBar = StencilView(size_hint=(None, None), size=(800, 154), pos=(0, 240))
+        # self.rpmBarImage = Image(source='rpmBar.png', size=(800, 154), pos=(0, 240))
+        # self.rpmBar.add_widget(self.rpmBarImage)
+        # self.add_widget(self.rpmBar)
+        with self.canvas:
+            Color(.75, .55, .15) #serpia
+            # Color(1, 1, 1)
+            RoundedRectangle(texture=texture, size=(370, 370), pos=(x - 185, y - 185), radius=(185, 185))
         with self.canvas:
             Color(arrow_hours.color[0], arrow_hours.color[1], arrow_hours.color[2])
             self.triangle_hours = Triangle(points=arrow_hours.points)
@@ -95,7 +136,7 @@ class BezierTest(FloatLayout):
             arrow_sec_circle.color_obj = arrow_color_circle
         with self.canvas:
             Color(.1, .1, .1)
-            r_bolt = 20
+            r_bolt = max(arrow_hours.point_width, arrow_min.point_width, arrow_sec.point_width)
             self.circle_bolt = RoundedRectangle(size=(r_bolt, r_bolt), pos=(x - r_bolt / 2, y - r_bolt / 2),
                                                 radius=(r_bolt / 2, r_bolt / 2))
         # with self.canvas:
@@ -103,20 +144,39 @@ class BezierTest(FloatLayout):
         #     self.line = Line(points=points)
         # Clock.schedule_interval(lambda yu: clock_arrow(self.line), 1)
         Clock.schedule_interval(lambda sec_: clock_arrow(arrow_sec, self.triangle_sec, label_, arrow_sec_circle,
-                                                         self.triangle_sec_circle, map_circle), 1 / 10.3)
+                                                         self.triangle_sec_circle, map_circle), 1 / 10.22)
         Clock.schedule_interval(lambda min_: clock_arrow(arrow_min, self.triangle_min), 60 / 20)
         Clock.schedule_interval(lambda hours_: clock_arrow(arrow_hours, self.triangle_hours), 3600 /
                                 (360 / 12 / arrow_hours.degrade_point))
-        # Clock.schedule_interval(lambda uu: clock_color(circle_color), .02)
+        color_manager = ColorManager(ColorRGB(.5, .005, .6, .45), ColorRGB(.5, .005, .6, .45), ColorRGB(.5, .005, .6, .45))
+        Clock.schedule_interval(lambda uu: rainbow_color(clock_face_color, color_manager), .05)
 
 
-# def clock_color(circle_color):
-#     color_red += color_red_delta
-#     if color_red > .7:
-#         color_red_delta = -1 * color_red_delta
-#     if color_red < .3:
-#         color_red_delta = -1 * color_red_delta
-#     circle_color.rgb = (color_red, .5, .6)
+def rainbow_color_(color):
+    color.value += color.value_step
+    if color.value > color.limit_up:
+        color.value_step = -1 * color.value_step
+    elif color.value < color.limit_down:
+        color.value_step = -1 * color.value_step
+    return color.value
+
+
+def rainbow_color(figure_color, manager):
+    if manager.red.value_step is not None:
+        red = rainbow_color_(manager.red)
+    else:
+        red = manager.red.value
+    if manager.green.value_step is not None:
+        green = rainbow_color_(manager.green)
+    else:
+        green = manager.green.value
+    if manager.blue.value_step is not None:
+        blue = rainbow_color_(manager.blue)
+    else:
+        blue = manager.blue.value
+    figure_color.rgb = (red, green, blue)
+
+
 count = -1
 
 
@@ -132,8 +192,9 @@ def flash_circle(map_circle, flash, indicator):
     if flash.itr_count == flash.COUNT:
         map_circle[indicator].rgb = color_flash
     elif flash.itr_count == 1:
-        map_circle[indicator].rgb = flash.fade_color
-    elif flash.itr_count > flash.COUNT/2:
+        # map_circle[indicator].rgb = flash.fade_color
+        pass
+    elif flash.itr_count > flash.COUNT / 2:
         flash.swing_count += 6
         if indicator + flash.swing_count == 360:
             map_circle[360].rgb = color_flash
@@ -167,22 +228,25 @@ def flash_circle(map_circle, flash, indicator):
             map_circle[indicator - flash.swing_count].rgb = flash.fade_color
         flash.swing_count -= 6
     else:
+        flash = FlashCircle()
+        Clock.schedule_interval(lambda ui: flash_figure_create(flash, map_circle[indicator], flash.fade_color, .05, .2),
+                                1 / 14)
         return False
     flash.itr_count -= 1
 
 
-def flash_arrow_circle(arrow_circle, flash):
+def flash_figure_create(flash, indicator, final_color=(.1, .1, .1), count_step=.05, count_limit=.5):
     color_flash = []
     for color in flash.flash_color:
         color = round(color * flash.fade_color_count, 2)
         color_flash.append(color)
-    flash.fade_color_count -= .05
+    flash.fade_color_count -= count_step
     flash.fade_color_count = round(flash.fade_color_count, 2)
-    if flash.fade_color_count < .5:
+    if flash.fade_color_count < count_limit:
         # print('Good')
-        arrow_circle.color_obj.rgb = arrow_circle.color
+        indicator.rgb = final_color
         return False
-    arrow_circle.color_obj.rgb = color_flash
+    indicator.rgb = color_flash
 
 
 def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_circle=None, map_circle=None):
@@ -200,31 +264,32 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
     x_end = x + arrow.length_arrow * cos(radians(arrow.degrade))
     y_end = y - arrow.length_arrow * sin(radians(arrow.degrade))
     # print('x_end = ', x_end, 'y_end = ', y_end)
-    first_point_base_triangle_x = x + 10 * cos(radians(arrow.degrade - 90))
-    first_point_base_triangle_y = y - 10 * sin(radians(arrow.degrade - 90))
-    second_point_base_triangle_x = x + 10 * cos(radians(arrow.degrade + 90))
-    second_point_base_triangle_y = y - 10 * sin(radians(arrow.degrade + 90))
+    first_point_base_triangle_x = x + arrow.point_width/2 * cos(radians(arrow.degrade - 90))
+    first_point_base_triangle_y = y - arrow.point_width/2 * sin(radians(arrow.degrade - 90))
+    second_point_base_triangle_x = x + arrow.point_width/2 * cos(radians(arrow.degrade + 90))
+    second_point_base_triangle_y = y - arrow.point_width/2 * sin(radians(arrow.degrade + 90))
     arrow.points = [first_point_base_triangle_x, first_point_base_triangle_y, second_point_base_triangle_x,
                     second_point_base_triangle_y, x_end, y_end]
     if arrow_circle is not None:
         x_circle = x + (arrow.length_arrow - 30) * cos(radians(arrow.degrade)) - (arrow_circle.size[0] / 2)
-        y_circle = y - (arrow.length_arrow - 30) * sin(radians(arrow.degrade)) - (arrow_circle.size[0] / 2)
+        y_circle = y - (arrow.length_arrow - 30) * sin(radians(arrow.degrade)) - (arrow_circle.size[1] / 2)
         arrow_circle.pos = (x_circle, y_circle)
     if triangle_circle is not None:
         triangle_circle.pos = arrow_circle.pos
         if not int(arrow.degrade) % 30:
-            flash = FlashCircle()
-            Clock.schedule_interval(lambda ui: flash_arrow_circle(arrow_circle, flash), 1 / 5)
             # arrow_circle.color_obj.rgb = [1, 1, 1]
             arrow_circle.arrow_in = True
             arrow_circle.touch_in = int(arrow.degrade)
         elif arrow_circle.arrow_in:
+            flash_arrow_crl = FlashCircle()
+            Clock.schedule_interval(lambda ui: flash_figure_create(flash_arrow_crl, arrow_circle.color_obj,
+                                                                   arrow_circle.color, .03, .3), 1 / 10)
             arrow_circle.arrow_in = False
             arrow_circle.color_obj.rgb = arrow_circle.color
             if not arrow_circle.touch_in:
                 arrow_circle.touch_in = 360
-            flash = FlashCircle(20)
-            Clock.schedule_interval(lambda ui: flash_circle(map_circle, flash, arrow_circle.touch_in), 1/10)
+            flash_ani_scale = FlashCircle(20)
+            Clock.schedule_interval(lambda ui: flash_circle(map_circle, flash_ani_scale, arrow_circle.touch_in), 1 / 20)
             if arrow_circle.touch_in == 270:
                 count += 1
                 label.text = str(count)
@@ -279,12 +344,12 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
 class Main(App):
 
     def build(self):
-        arrow_sec = Arrow(270, 250, 6 / 10)
-        arrow_sec.color = [.7, .15, .15]
-        arrow_min = Arrow(270, 250, 6 / 20)
-        arrow_min.color = [.15, .15, .7]
-        arrow_hours = Arrow(270, 150, 6 / 20)
-        arrow_hours.color = [.15, .15, .15]
+        arrow_sec = Arrow(270, 250, 6 / 10, 16)
+        arrow_sec.color = [.72, .15, .1]
+        arrow_min = Arrow(270, 250, 6 / 20, 24)
+        arrow_min.color = [.2, .15, .5]
+        arrow_hours = Arrow(270, 150, 6 / 20, 26)
+        arrow_hours.color = [.1, .1, .1]
         arrow_sec_circle = CirclePoint((20, 20), (10, 10))
         arrow_sec_circle.color = arrow_sec.color
         clock_arrow(arrow_sec, None, arrow_sec_circle)
