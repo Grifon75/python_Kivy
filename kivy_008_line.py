@@ -1,6 +1,7 @@
 import io
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.properties import ObjectProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.slider import Slider
 from kivy.graphics import Color, Bezier, Line, RoundedRectangle, Triangle, SmoothLine, Canvas, Rectangle
@@ -66,21 +67,48 @@ class CirclePoint:
 
 
 class BezierTest(FloatLayout):
+
+    # texture = ObjectProperty()
+
     def __init__(self, arrow_sec, arrow_min, arrow_hours, arrow_sec_circle, *args, **kwargs):
         super(BezierTest, self).__init__(*args, **kwargs)
         label_ = Label(text='0', size_hint=(.1, .1), pos_hint={'x': .1}, color=(1, 1, 1), font_size=20)
         self.add_widget(label_)
         # self.add_widget(Button(text='My first button', size_hint=(.1, .1), pos_hint={'x': 0}))
         with self.canvas:
-            Color(.35, .35, .35)
-            self.circle = RoundedRectangle(size=(520, 520), pos=(x - 260, y - 260), radius=(260, 260))
+            Color(.45, .35, 0.2)
+            self.circle = RoundedRectangle(size=(514, 514), pos=(x - 257, y - 257), radius=(257, 257))
+        with self.canvas:
+            Color(.65, .55, 0.2)
+            self.circle = RoundedRectangle(size=(500, 500), pos=(x - 250, y - 250), radius=(250, 250))
         with self.canvas:
             clock_face_color = Color(.5, .5, .5)
-            self.circle = RoundedRectangle(size=(500, 500), pos=(x - 250, y - 250), radius=(250, 250))
+            self.circle = RoundedRectangle(size=(490, 490), pos=(x - 245, y - 245), radius=(245, 245))
+        with self.canvas:
+            Color(.65, .55, 0.2)
+            self.circle = RoundedRectangle(size=(390, 390), pos=(x - 195, y - 195), radius=(195, 195))
+
+        flash = FlashCircle()
+        index_ = 0
+        while index_ < 360:
+            if not index_ % 30:
+                x_ = (x - 11) + (arrow_sec.length_arrow - 30) * cos(radians(index_))
+                y_ = (y - 11) + (arrow_sec.length_arrow - 30) * sin(radians(index_))
+                with self.canvas:
+                    Color(.8, .66, .1)
+                    self.circle_ = RoundedRectangle(size=(22, 22), pos=(x_, y_), radius=(11, 11))
+            else:
+                x_ = (x - 7) + (arrow_sec.length_arrow - 30) * cos(radians(index_))
+                y_ = (y - 7) + (arrow_sec.length_arrow - 30) * sin(radians(index_))
+                with self.canvas:
+                    Color(.8, .66, .1)
+                    self.circle_ = RoundedRectangle(size=(14, 14), pos=(x_, y_), radius=(7, 7))
+            index_ += 6
+
         map_circle = dict()
         index = 0
         index_r = 360
-        flash = FlashCircle()
+
         while index < 360:
             if not index % 30:
                 x_ = (x - 9) + (arrow_sec.length_arrow-30) * cos(radians(index))
@@ -98,14 +126,19 @@ class BezierTest(FloatLayout):
                     map_circle[index_r] = clr
             index += 6
             index_r -= 6
+
         with self.canvas:
-            Color(.13, .13, .13)
+            Color(.2, .2, .13)
             RoundedRectangle(size=(380, 380), pos=(x - 190, y - 190), radius=(190, 190))
             #d:\Ava\sexmachine999-2gnhz-5bb16a.gif image\Dali_open_window.jpg
         # image = Image(r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif')
         # data = io.BytesIO(open(r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif', "rb").read())
         # im_ = Image(data, ext="gif")
-        texture = Image(source=r'd:\Ava\sexmachine999-2gnhz-5bb16a.gif', size_hint=(.1, .1)).texture
+        texture = Image(source=r'image\in_clock_2.jpg').texture
+        # texture.wrap = 'clamp_to_edge'
+        # texture.uvpos = (0, 0)
+        # texture.uvsize = (0, 0)
+        # texture.get_region(0, 0, 64, 64)
         # Valid properties are['allow_stretch', 'anim_delay', 'anim_loop', 'center', 'center_x', 'center_y', 'children',
         # 'cls', 'color', 'disabled', 'fit_mode', 'height', 'ids', 'image_ratio', 'keep_data', 'keep_ratio', 'mipmap',
         # 'motion_filter', 'nocache', 'norm_image_size', 'opacity', 'parent', 'pos', 'pos_hint', 'right', 'size',
@@ -117,8 +150,8 @@ class BezierTest(FloatLayout):
         # self.rpmBar.add_widget(self.rpmBarImage)
         # self.add_widget(self.rpmBar)
         with self.canvas:
-            Color(.75, .55, .15) #serpia
-            # Color(1, 1, 1)
+            # Color(.75, .55, .15) #serpia
+            Color(.85, .85, .85)
             RoundedRectangle(texture=texture, size=(370, 370), pos=(x - 185, y - 185), radius=(185, 185))
         with self.canvas:
             Color(arrow_hours.color[0], arrow_hours.color[1], arrow_hours.color[2])
@@ -146,9 +179,11 @@ class BezierTest(FloatLayout):
         Clock.schedule_interval(lambda sec_: clock_arrow(arrow_sec, self.triangle_sec, label_, arrow_sec_circle,
                                                          self.triangle_sec_circle, map_circle), 1 / 10.22)
         Clock.schedule_interval(lambda min_: clock_arrow(arrow_min, self.triangle_min), 60 / 20)
+        # print(3600 / 5 / (6 / arrow_hours.degrade_point))
+        # print(3600 / (360 / 12 / arrow_hours.degrade_point))
         Clock.schedule_interval(lambda hours_: clock_arrow(arrow_hours, self.triangle_hours), 3600 /
                                 (360 / 12 / arrow_hours.degrade_point))
-        color_manager = ColorManager(ColorRGB(.5, .005, .6, .45), ColorRGB(.5, .005, .6, .45), ColorRGB(.5, .005, .6, .45))
+        color_manager = ColorManager(ColorRGB(.8, .005, .9, .7), ColorRGB(.6, .005, .7, .5), ColorRGB(0))
         Clock.schedule_interval(lambda uu: rainbow_color(clock_face_color, color_manager), .05)
 
 
@@ -183,34 +218,35 @@ count = -1
 def flash_circle(map_circle, flash, indicator):
     color_flash = []
     for color in flash.flash_color:
-        color = round(color * flash.fade_color_count, 2)
+        color -= .09
+        if color < 0:
+            color = 0
         color_flash.append(color)
-    flash.fade_color_count -= .1
-    flash.fade_color_count = round(flash.fade_color_count, 2)
-    if flash.fade_color_count < 0:
-        flash.fade_color_count = 0
+    flash.flash_color = color_flash
+    if max(flash.flash_color) < .1:
+        flash.flash_color = (.1, .1, .1)
     if flash.itr_count == flash.COUNT:
-        map_circle[indicator].rgb = color_flash
+        map_circle[indicator].rgb = flash.flash_color
     elif flash.itr_count == 1:
         # map_circle[indicator].rgb = flash.fade_color
         pass
     elif flash.itr_count > flash.COUNT / 2:
         flash.swing_count += 6
         if indicator + flash.swing_count == 360:
-            map_circle[360].rgb = color_flash
+            map_circle[360].rgb = flash.flash_color
         elif indicator + flash.swing_count > 360:
             # flash.swing_count -= 6
             flash.negative_count_increase += 6
-            map_circle[0 + flash.negative_count_increase].rgb = color_flash
+            map_circle[0 + flash.negative_count_increase].rgb = flash.flash_color
         else:
-            map_circle[indicator + flash.swing_count].rgb = color_flash
+            map_circle[indicator + flash.swing_count].rgb = flash.flash_color
         if indicator - flash.swing_count == 0:
-            map_circle[360].rgb = color_flash
+            map_circle[360].rgb = flash.flash_color
         elif indicator - flash.swing_count < 0:
             flash.negative_count_decrease += 6
-            map_circle[360 - flash.negative_count_decrease].rgb = color_flash
+            map_circle[360 - flash.negative_count_decrease].rgb = flash.flash_color
         else:
-            map_circle[indicator - flash.swing_count].rgb = color_flash
+            map_circle[indicator - flash.swing_count].rgb = flash.flash_color
     elif flash.itr_count > 0:
         if flash.negative_count_increase > 0:
             # flash.swing_count += 6
@@ -229,6 +265,7 @@ def flash_circle(map_circle, flash, indicator):
         flash.swing_count -= 6
     else:
         flash = FlashCircle()
+        flash.flash_color = (1, 1, .7)
         Clock.schedule_interval(lambda ui: flash_figure_create(flash, map_circle[indicator], flash.fade_color, .05, .2),
                                 1 / 14)
         return False
@@ -238,15 +275,16 @@ def flash_circle(map_circle, flash, indicator):
 def flash_figure_create(flash, indicator, final_color=(.1, .1, .1), count_step=.05, count_limit=.5):
     color_flash = []
     for color in flash.flash_color:
-        color = round(color * flash.fade_color_count, 2)
+        color -= count_step
+        if color < min(final_color):
+            color = min(final_color)
         color_flash.append(color)
-    flash.fade_color_count -= count_step
-    flash.fade_color_count = round(flash.fade_color_count, 2)
-    if flash.fade_color_count < count_limit:
+    flash.flash_color = color_flash
+    if max(flash.flash_color) < count_limit:
         # print('Good')
         indicator.rgb = final_color
         return False
-    indicator.rgb = color_flash
+    indicator.rgb = flash.flash_color
 
 
 def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_circle=None, map_circle=None):
@@ -282,13 +320,15 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
             arrow_circle.touch_in = int(arrow.degrade)
         elif arrow_circle.arrow_in:
             flash_arrow_crl = FlashCircle()
+            flash_arrow_crl.flash_color = (1, 1, .7)
             Clock.schedule_interval(lambda ui: flash_figure_create(flash_arrow_crl, arrow_circle.color_obj,
-                                                                   arrow_circle.color, .03, .3), 1 / 10)
+                                                                   arrow_circle.color, .03, .5), 1 / 10)
             arrow_circle.arrow_in = False
             arrow_circle.color_obj.rgb = arrow_circle.color
             if not arrow_circle.touch_in:
                 arrow_circle.touch_in = 360
             flash_ani_scale = FlashCircle(20)
+            flash_ani_scale.flash_color = (1, 1, .7)
             Clock.schedule_interval(lambda ui: flash_circle(map_circle, flash_ani_scale, arrow_circle.touch_in), 1 / 20)
             if arrow_circle.touch_in == 270:
                 count += 1
