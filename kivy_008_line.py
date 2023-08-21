@@ -1,4 +1,6 @@
 import io
+import time
+
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import ObjectProperty
@@ -9,7 +11,17 @@ from math import cos, sin, radians
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.image import Image
-from kivy.uix.stencilview import StencilView
+# from kivy.uix.stencilview import StencilView
+# from kivy.core.window import Window
+from kivy.config import Config
+
+Config.set('graphics', 'resizable', 0)
+Config.set('graphics', 'width', 750)
+Config.set('graphics', 'height', 600)
+
+# red background color
+# Window.borderless = True
+# Window.clearcolor = (1, 1, .5, .1)
 
 x, y = (360, 300)
 
@@ -66,6 +78,22 @@ class CirclePoint:
         self.radius = radius
 
 
+class PeriodDelay:
+    def __init__(self, anime_delay, float_frequency, constant_frequency):
+        self.anime_delay = anime_delay
+        self.float_frequency = float_frequency
+        self.constant_frequency = constant_frequency
+
+
+class EventBox:
+    sec = None
+    min = None
+    hours = None
+
+
+time_box = EventBox()
+
+
 class BezierTest(FloatLayout):
 
     # texture = ObjectProperty()
@@ -95,13 +123,13 @@ class BezierTest(FloatLayout):
                 x_ = (x - 11) + (arrow_sec.length_arrow - 30) * cos(radians(index_))
                 y_ = (y - 11) + (arrow_sec.length_arrow - 30) * sin(radians(index_))
                 with self.canvas:
-                    Color(.8, .66, .1)
+                    Color(.8, .85, .65)
                     self.circle_ = RoundedRectangle(size=(22, 22), pos=(x_, y_), radius=(11, 11))
             else:
                 x_ = (x - 7) + (arrow_sec.length_arrow - 30) * cos(radians(index_))
                 y_ = (y - 7) + (arrow_sec.length_arrow - 30) * sin(radians(index_))
                 with self.canvas:
-                    Color(.8, .66, .1)
+                    Color(.9, .8, .65)
                     self.circle_ = RoundedRectangle(size=(14, 14), pos=(x_, y_), radius=(7, 7))
             index_ += 6
 
@@ -151,7 +179,7 @@ class BezierTest(FloatLayout):
         # self.add_widget(self.rpmBar)
         with self.canvas:
             # Color(.75, .55, .15) #serpia
-            Color(.85, .85, .85)
+            Color(.79, .79, .7)
             RoundedRectangle(texture=texture, size=(370, 370), pos=(x - 185, y - 185), radius=(185, 185))
         with self.canvas:
             Color(arrow_hours.color[0], arrow_hours.color[1], arrow_hours.color[2])
@@ -176,22 +204,65 @@ class BezierTest(FloatLayout):
         #     Color(1.0, 0.0, 1.0)
         #     self.line = Line(points=points)
         # Clock.schedule_interval(lambda yu: clock_arrow(self.line), 1)
-        Clock.schedule_interval(lambda sec_: clock_arrow(arrow_sec, self.triangle_sec, label_, arrow_sec_circle,
-                                                         self.triangle_sec_circle, map_circle), 1 / 10.22)
-        Clock.schedule_interval(lambda min_: clock_arrow(arrow_min, self.triangle_min), 60 / 20)
-        # print(3600 / 5 / (6 / arrow_hours.degrade_point))
-        # print(3600 / (360 / 12 / arrow_hours.degrade_point))
-        Clock.schedule_interval(lambda hours_: clock_arrow(arrow_hours, self.triangle_hours), 3600 /
-                                (360 / 12 / arrow_hours.degrade_point))
-        color_manager = ColorManager(ColorRGB(.8, .005, .9, .7), ColorRGB(.6, .005, .7, .5), ColorRGB(0))
+
+        # Clock.schedule_interval(lambda sec_: clock_arrow_anime(arrow_sec, arrow_min, arrow_hours, self.triangle_sec,
+        #                                                  self.triangle_min, self.triangle_hours, arrow_sec_circle,
+        #                                                  self.triangle_sec_circle), 1 / 10.22)
+        time_local_sec = time.localtime().tm_sec
+        time_local_min = time.localtime().tm_min
+        time_local_hours = time.localtime().tm_hour
+        if time_local_hours >= 12:
+            time_local_hours = time_local_hours - 12
+        sec_period = PeriodDelay(time_local_sec * 6 / arrow_sec.degrade_point, 1/60, 1 / (6 / arrow_sec.degrade_point))
+        print(sec_period.anime_delay, ' ', time_local_sec)
+        min_period = PeriodDelay(time_local_min * 6 / arrow_min.degrade_point + time_local_sec*(6 / arrow_min.degrade_point)/60, 1/60,
+                                 60 / (6 / arrow_min.degrade_point))
+        hours_period = PeriodDelay(time_local_hours * 5 * 6 / arrow_hours.degrade_point + time_local_min*((6 / arrow_hours.degrade_point) * 5)/60, 1/60,
+                                   3600 / ((6 / arrow_hours.degrade_point) * 5))
+        # anime_sec_delay = time.localtime().tm_sec * 6 / arrow_sec.degrade_point
+        # anime_min_delay = time.localtime().tm_min * 6 / arrow_min.degrade_point
+        # anime_hours_delay = time.localtime().tm_hour * 6 / arrow_hours.degrade_point
+        # sec_period_start = 1/60
+        # min_period_start = 1/60
+        # hours_period_start = 1/60
+        # sec_period = sec_period_start
+        # min_period = min_period_start
+        # hours_period = hours_period_start
+        # global const_sec_period
+        # global const_min_period
+        # global const_hours_period
+        # const_sec_period = 1 / ((6 / arrow_sec.degrade_point) + .22)
+        # const_min_period = 60 / (6 / arrow_min.degrade_point)
+        # const_hours_period = 3600 / ((6 / arrow_hours.degrade_point) * 5)
+        event_sec = Clock.schedule_interval(lambda sec_: clock_arrow(arrow_sec, self.triangle_sec, 'sec', sec_period, label_, arrow_sec_circle,
+                                                         self.triangle_sec_circle, map_circle), sec_period.float_frequency)
+        event_min = Clock.schedule_interval(lambda min_: clock_arrow(arrow_min, self.triangle_min, 'min', min_period), min_period.float_frequency)
+        event_hours = Clock.schedule_interval(lambda hours_: clock_arrow(arrow_hours, self.triangle_hours, 'hours', hours_period), hours_period.float_frequency)
+        global time_box
+        time_box.sec = event_sec
+        time_box.min = event_min
+        time_box.hours = event_hours
+        color_manager = ColorManager(ColorRGB(.8, .005, .9, .7), ColorRGB(.8, .005, .9, .7), ColorRGB(.7, .005, .8, .6))
+
         Clock.schedule_interval(lambda uu: rainbow_color(clock_face_color, color_manager), .05)
+
+        # time.struct_time(tm_year=2023, tm_mon=8, tm_mday=20, tm_hour=15, tm_min=50, tm_sec=46, tm_wday=6, tm_yday=232,
+        #                  tm_isdst=0)
+
+        # timestamp = time.time()
+        # print(time.ctime(timestamp))
+        # time_sec = time.localtime().tm_sec
+        # time_min = time.localtime().tm_min
+        # time_hours = time.localtime().tm_hour
+        # time_sec = time.gmtime(timestamp).tm_sec
+        # time_min = time.gmtime(timestamp).tm_min
+        # time_hours = time.gmtime(timestamp).tm_hour
+        # print(time_hours, ' ', time_min, ' ', time_sec)
 
 
 def rainbow_color_(color):
     color.value += color.value_step
-    if color.value > color.limit_up:
-        color.value_step = -1 * color.value_step
-    elif color.value < color.limit_down:
+    if color.value > color.limit_up or color.value < color.limit_down:
         color.value_step = -1 * color.value_step
     return color.value
 
@@ -267,7 +338,7 @@ def flash_circle(map_circle, flash, indicator):
         flash = FlashCircle()
         flash.flash_color = (1, 1, .7)
         Clock.schedule_interval(lambda ui: flash_figure_create(flash, map_circle[indicator], flash.fade_color, .05, .2),
-                                1 / 14)
+                                1 / 30)
         return False
     flash.itr_count -= 1
 
@@ -287,12 +358,47 @@ def flash_figure_create(flash, indicator, final_color=(.1, .1, .1), count_step=.
     indicator.rgb = flash.flash_color
 
 
-def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_circle=None, map_circle=None):
-    global x, y, count
-    x_ = x
-    y_ = y
-    index = 0
-    points = []
+def clock_arrow_local(arrow, triangle, mark, anime_period, label, arrow_circle, triangle_circle, map_circle):
+    global time_box
+    if mark == 'sec':
+        Clock.unschedule(time_box.sec)
+        arrow.degrade_point = 6/10
+        anime_period.constant_frequency = 1 / (6 / arrow.degrade_point)
+        Clock.schedule_interval(lambda sec: clock_arrow(arrow, triangle, mark, None, label, arrow_circle,
+                                                     triangle_circle, map_circle), anime_period.constant_frequency)
+    elif mark == 'min':
+        Clock.unschedule(time_box.min)
+        arrow.degrade_point = 6/20
+        anime_period.constant_frequency = 60 / (6 / arrow.degrade_point)
+        Clock.schedule_interval(lambda min: clock_arrow(arrow, triangle, mark, None, label, arrow_circle,
+                                                        triangle_circle, map_circle), anime_period.constant_frequency)
+    elif mark == 'hours':
+        Clock.unschedule(time_box.hours)
+        arrow.degrade_point = 6/20
+        anime_period.constant_frequency = 3600 / ((6 / arrow.degrade_point)*5)
+        Clock.schedule_interval(lambda hours: clock_arrow(arrow, triangle, mark, None, label, arrow_circle,
+                                                        triangle_circle, map_circle), anime_period.constant_frequency)
+
+
+tyz = 0
+
+
+def clock_arrow(arrow, triangle=None, mark='', anime_period=None, label=None, arrow_circle=None, triangle_circle=None, map_circle=None):
+    global x, y, count, tyz
+    if mark == 'min':
+        print(arrow.degrade_point)
+    if anime_period is not None:
+        if anime_period.anime_delay > 0:
+            anime_period.anime_delay -= 1
+        else:
+            # anime_period.anime_delay = 100
+            print(tyz)
+            clock_arrow_local(arrow, triangle, mark, anime_period, label, arrow_circle, triangle_circle, map_circle)
+            return
+    # x_ = x
+    # y_ = y
+    # index = 0
+    # points = []
     # while index <= length_arrow:
     #     x_ += cos(radians(degrade))
     #     y_ -= sin(radians(degrade))
@@ -321,7 +427,8 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
         elif arrow_circle.arrow_in:
             flash_arrow_crl = FlashCircle()
             flash_arrow_crl.flash_color = (1, 1, .7)
-            Clock.schedule_interval(lambda ui: flash_figure_create(flash_arrow_crl, arrow_circle.color_obj,
+            if anime_period is None:
+                Clock.schedule_interval(lambda ui: flash_figure_create(flash_arrow_crl, arrow_circle.color_obj,
                                                                    arrow_circle.color, .03, .5), 1 / 10)
             arrow_circle.arrow_in = False
             arrow_circle.color_obj.rgb = arrow_circle.color
@@ -329,17 +436,22 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
                 arrow_circle.touch_in = 360
             flash_ani_scale = FlashCircle(20)
             flash_ani_scale.flash_color = (1, 1, .7)
-            Clock.schedule_interval(lambda ui: flash_circle(map_circle, flash_ani_scale, arrow_circle.touch_in), 1 / 20)
+            if anime_period is None:
+                Clock.schedule_interval(lambda ui: flash_circle(map_circle, flash_ani_scale, arrow_circle.touch_in), 1 / 50)
             if arrow_circle.touch_in == 270:
                 count += 1
                 label.text = str(count)
     arrow.degrade += arrow.degrade_point
+    if mark == 'min':
+        print(arrow.degrade)
     arrow.degrade = round(arrow.degrade, 1)
     # if 270 + arrow.degrade_point > arrow.degrade >= 270:
     #     count += 1
     #     label.text = str(count)
-    if arrow.degrade > 360:
-        arrow.degrade = arrow.degrade_point
+    if arrow.degrade == 360:
+        arrow.degrade = 0
+    elif arrow.degrade > 360:
+        arrow.degrade = arrow.degrade - 360
     if triangle is not None:
         triangle.points = arrow.points
     # def _set_bezier_dash_offset(self, instance, value):
@@ -384,17 +496,18 @@ def clock_arrow(arrow, triangle=None, label=None, arrow_circle=None, triangle_ci
 class Main(App):
 
     def build(self):
-        arrow_sec = Arrow(270, 250, 6 / 10, 16)
+        App.title = 'clock'
+        arrow_sec = Arrow(270, 250, 6 / 3, 16)
         arrow_sec.color = [.72, .15, .1]
-        arrow_min = Arrow(270, 250, 6 / 20, 24)
+        arrow_min = Arrow(270, 250, 6 / 4, 24)
         arrow_min.color = [.2, .15, .5]
-        arrow_hours = Arrow(270, 150, 6 / 20, 26)
-        arrow_hours.color = [.1, .1, .1]
+        arrow_hours = Arrow(270, 150, 6 / 5, 26)
+        arrow_hours.color = [.3, .1, .3]
         arrow_sec_circle = CirclePoint((20, 20), (10, 10))
         arrow_sec_circle.color = arrow_sec.color
-        clock_arrow(arrow_sec, None, arrow_sec_circle)
-        clock_arrow(arrow_min)
-        clock_arrow(arrow_hours)
+        # clock_arrow(arrow_sec, None, '', None, arrow_sec_circle)
+        # clock_arrow(arrow_min)
+        # clock_arrow(arrow_hours)
         return BezierTest(arrow_sec, arrow_min, arrow_hours, arrow_sec_circle)
 
 
