@@ -258,7 +258,7 @@ class BezierTest(FloatLayout):
             arrow_sec_circle.color_obj = arrow_color_circle
 
         with self.canvas:
-            Color(.1, .1, .1)
+            Color(.25, .22, .15)
             r_bolt = max(arrow_hours.point_width, arrow_min.point_width, arrow_sec.point_width)
             self.circle_bolt = RoundedRectangle(size=(r_bolt, r_bolt), pos=(x - r_bolt / 2, y - r_bolt / 2),
                                                 radius=(r_bolt / 2, r_bolt / 2))
